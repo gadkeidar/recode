@@ -13,7 +13,7 @@ Patterns = namedtuple('Patterns', ['line', 'group'])
 # Recodes table patterns:
 
 CODE_INTEGER = r'\s*(\d+)'
-CODE_ICD_10 = r'\s*(?:\*)?(\w\d\d(?:\.\d)?)'
+CODE_ICD_10 = r'\s*(?:\*)?(\w\d\d\.?\d?)'
 GROUP_ICD_10 = fr'(?:{CODE_ICD_10}\s*(?:-{CODE_ICD_10})?(?:,)?)+'
 
 ICD_10_TO_INTEGER = Patterns(
@@ -126,8 +126,6 @@ class RecodeNode(NodeMixin):
 
 class Recoder:
     """Converter from one coding system another.
-    Currently based on ICD-10 Recodes Tables from NCHS of CDC.
-    Can be extended to other recodes definition, by defining appropriate re patterns.
 
     Quick start:
         from recode import Recoder

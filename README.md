@@ -1,6 +1,9 @@
 # recode
-Converter from one coding system another.
+Converter from one coding system to another.
 
-Currently based on ICD-10 Recodes Tables from NCHS of CDC.
+Based on ICD-10 Recodes Tables from
+ National Center for Health Statistics (NCHS)
+ of Centers for Disease Control and Prevention (CDC), 
+ but can be used with other recodes definitions.
 
-Can be extended to other recodes definition, by defining appropriate re patterns.
+Requires Python 3.8+.
