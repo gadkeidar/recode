@@ -8,17 +8,19 @@ from typing import Any, Protocol, List, Optional
 from anytree import NodeMixin, RenderTree
 
 
-Patterns = namedtuple('Patterns', ['line', 'group'])
+Patterns = namedtuple('Patterns', ['line', 'group', 'range'])
 
 # Recodes table patterns:
 
 CODE_INTEGER = r'\s*(\d+)'
 CODE_ICD_10 = r'\s*(?:\*)?(\w\d\d\.?\d?)'
-GROUP_ICD_10 = fr'(?:{CODE_ICD_10}\s*(?:-{CODE_ICD_10})?(?:,)?)+'
+RANGE_ICD_10 = fr'{CODE_ICD_10}\s*(?:-{CODE_ICD_10})?'
+GROUP_ICD_10 = fr'(?:{RANGE_ICD_10}(?:,)?)+'
 
 ICD_10_TO_INTEGER = Patterns(
-    line=fr'{CODE_INTEGER}\s*=.+\({GROUP_ICD_10}\)',
-    group=GROUP_ICD_10
+    line=fr'{CODE_INTEGER}\s*=.+\(({GROUP_ICD_10})\)\s*$',
+    group=GROUP_ICD_10,
+    range=RANGE_ICD_10,
 )
 
 
@@ -148,13 +150,9 @@ class Recoder:
         with open(file) as lines:
             next(lines)  # Skip header line
             for line in lines:
-                if match := re.search(self.patterns.line, line):
-                    codes = iter(match.groups())
-                    new_code = next(codes)
-                    group = Group([
-                        CodeRange(code, next(codes))
-                        for code in codes
-                    ])
+                if line_match := re.search(self.patterns.line, line):
+                    new_code = line_match[1]
+                    group = self.create_group(line_match[2])
                     parent_recode = [self.root, *self.root.get_path(group)][-1]
                     RecodeNode(new_code, group, parent=parent_recode)
                 else:
@@ -171,12 +169,25 @@ class Recoder:
             The group contains one or more range of codes, each range can be singular (G20 <=> G20-G20)
         :return: list of all codes that match *group*
         """
-        match = re.fullmatch(self.patterns.group, group)
-        if not match:
+        if not re.fullmatch(self.patterns.group, group):
             raise ValueError(f'Group {group!r} is not valid')
-        codes = iter(match.groups())
-        return [
-            node.code for node in self.root.get_path(
-                Group([CodeRange(code, next(codes)) for code in codes])
-            )
-        ]
+        return [node.code for node in self.root.get_path(self.create_group(group))]
+
+    def create_group(self, group: str) -> Group:
+        """Return new Group based on *group*.
+
+        :param group: group of codes, e.g. 'A01-A10, C90-C99'
+            The group contains one or more range of codes, each range can be singular (G20 <=> G20-G20)
+        :return: appropriate Group object
+        """
+        range_iter = re.finditer(self.patterns.range, group)
+        return Group([
+            CodeRange(self.preprocess_code(range_match[1]), self.preprocess_code(range_match[2]))
+            for range_match in range_iter
+        ])
+
+    def preprocess_code(self, code: str) -> str:
+        if self.patterns.range == RANGE_ICD_10:
+            if code and len(code) > 3 and code[3] != '.':
+                code = '.'.join([code[:3], code[3:]])
+        return code
