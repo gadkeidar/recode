@@ -1,6 +1,7 @@
 from recode import Recoder
 
-recoder = Recoder('../tables/358 ICD-10 Recodes.txt')
+recoder = Recoder('../tables/113 ICD-10 Recodes_cov.txt')
 print(recoder)
-print(recoder.get_codes('G20'))
-print(recoder.get_codes('C101'))
+codes = ['G20', 'C101', 'U07.1', 'U071']
+for code in codes:
+    print(recoder.get_codes(code))
