@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections import UserList, namedtuple
 import re
-from typing import Any, Protocol, List, Optional
+from typing import Any, Protocol, List, Optional, Tuple
 
 from anytree import NodeMixin, RenderTree
 
@@ -182,12 +182,21 @@ class Recoder:
         """
         range_iter = re.finditer(self.patterns.range, group)
         return Group([
-            CodeRange(self.preprocess_code(range_match[1]), self.preprocess_code(range_match[2]))
+            CodeRange(*self.preprocess_range(range_match[1], range_match[2]))
             for range_match in range_iter
         ])
 
-    def preprocess_code(self, code: str) -> str:
+    def preprocess_range(self, start: str, end: str) -> Tuple[str, str]:
         if self.patterns.range == RANGE_ICD_10:
-            if code and len(code) > 3 and code[3] != '.':
-                code = '.'.join([code[:3], code[3:]])
-        return code
+            if start:
+                if len(start) == 3:
+                    start += '.0'
+                elif start[3] != '.':
+                    start = '.'.join([start[:3], start[3:]])
+            if end:
+                if len(end) == 3:
+                    end += '.9'
+                elif end[3] != '.':
+                    end = '.'.join([end[:3], end[3:]])
+
+        return start, end
