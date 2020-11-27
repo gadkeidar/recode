@@ -127,14 +127,7 @@ class RecodeNode(NodeMixin):
 
 
 class Recoder:
-    """Converter from one coding system another.
-
-    Quick start:
-        from recode import Recoder
-        recoder = Recoder('tables/358 ICD-10 Recodes.txt')
-        print(recoder)
-        print(recoder.get_codes('G20'))
-    """
+    """Converter from one coding system another."""
     FilePath = str
 
     def __init__(self, file: FilePath, patterns: Patterns = ICD_10_TO_INTEGER):

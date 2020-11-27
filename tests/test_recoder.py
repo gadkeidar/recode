@@ -1,4 +1,4 @@
-from recode.recode import Recoder
+from icd10_c2cdc import Recoder
 
 recoder = Recoder('../tables/113 ICD-10 Recodes_cov.txt')
 print(recoder)
